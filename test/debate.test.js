@@ -90,4 +90,66 @@ describe('End points de Debate', () => {
     // - Actualizar un debate
     // - Eliminar un debate
     // - Casos de error
+
+    describe('GET /debate', () => {
+        it('debe obtener todos los debates (200 OK o 204 No Content)', async () => {
+            const res = await request(API_BASE_URL)
+                .get('/debate');
+
+            expect([200, 204]).to.include(res.status);
+        });
+
+        it('debe filtrar debates por categoría sin importar mayúsculas/minúsculas', async () => {
+            const res = await request(API_BASE_URL)
+                .get('/debate?category=POLITICA'); // Ejemplo con mayúsculas
+
+            expect([200, 204]).to.include(res.status);
+        });
+
+        it('debe filtrar debates por usuario autenticado', async () => {
+            const res = await request(API_BASE_URL)
+                .get(`/debate?user=${testUser.username}`)
+                .set('Authorization', `Bearer ${token}`);
+
+            expect([200, 204]).to.include(res.status);
+        });
+
+        it('debe rechazar filtrar por usuario sin autenticación (401)', async () => {
+            const res = await request(API_BASE_URL)
+                .get(`/debate?user=${testUser.username}`);
+
+            expect(res.status).to.equal(401);
+        });
+    });
+
+    describe('POST /debate/position/:id', () => {
+        const fakeDebateId = '1234567890abcdef'; // Reemplaza por uno real si lo conoces
+
+        it('debe rechazar sin autenticación (401)', async () => {
+            const res = await request(API_BASE_URL)
+                .post(`/debate/position/${fakeDebateId}`)
+                .send({ position: true });
+
+            expect(res.status).to.equal(401);
+        });
+
+        it('debe rechazar con debate inexistente (404)', async () => {
+            const res = await request(API_BASE_URL)
+                .post(`/debate/position/${fakeDebateId}`)
+                .set('Authorization', `Bearer ${token}`)
+                .send({ position: true });
+
+            expect(res.status).to.equal(404);
+        });
+
+        it('debe rechazar sin enviar posición válida (400)', async () => {
+            const res = await request(API_BASE_URL)
+                .post(`/debate/position/${fakeDebateId}`)
+                .set('Authorization', `Bearer ${token}`)
+                .send({ }); // Sin position
+
+            expect(res.status).to.equal(400);
+        });
+
+    });
 });
