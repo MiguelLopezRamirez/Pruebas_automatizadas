@@ -6,7 +6,8 @@
     "dev": "node app.js",
     "test": "mocha test/*.test.js",
     "test:debate": "mocha ./test/debate.test.js",
-    "test:comment": "mocha ./test/comment.test.js"
+    "test:comment": "mocha ./test/comment.test.js",
+    "test:notFound": "mocha ./test/notFound.test.js"
   },
   "keywords": [],
   "author": "",

@@ -7,6 +7,7 @@ const COMMENT_URL = `${API_BASE_URL}/api/v1/comment`;
 
 describe('Endpoints de Comentarios', () => {
     let authToken; // Token JWT
+    let debateId = "MMqWQKBYOxKF9pzhjFPf"; 
     let commentId = "1745716175576"; // IMPORTANTE. Cada vez que se ejecute se debe agregar un ID de comentario existente. No lo automaticé con el POST porque no retorna el ID. 
 
     // Iniciar sesión antes de las pruebas
@@ -22,6 +23,47 @@ describe('Endpoints de Comentarios', () => {
         expect(loginRes.status).to.equal(200);
         expect(loginRes.body).to.have.property('token');
         authToken = loginRes.body.token;
+    });
+
+    
+    //POST /debate/:id
+    describe('POST /debate/:id', () => {
+        it('Debe crear un nuevo comentario a un debate existente (200 OK)', async () => {
+            const newComment = {
+                username: "airam",
+                position: true,
+                argument: "Argumento de prueba"
+            };
+            const res = await request(`${API_BASE_URL}/api/v1/debate`)
+                .post(`/${debateId}`)
+                .set('Authorization', `Bearer ${authToken}`)
+                .send(newComment);
+            expect(res.status).to.equal(200);
+        });
+        it('No debe permitir crear comentario con argumentos inválidos (400 Bad Request)', async () => {
+            const res = await request(`${API_BASE_URL}/api/v1/debate`)
+                .post(`/${debateId}`)
+                .set('Authorization', `Bearer ${authToken}`)
+                .send({ position: "Se espera booleano" }); 
+
+            expect(res.status).to.equal(400);
+        });
+        it('No debe permitir crear comentario sin autenticación (401 Unauthorized)', async () => {
+            const fakeToken = "TokenNoValido"
+            const res = await request(`${API_BASE_URL}/api/v1/debate`)
+                .post(`/${debateId}`)
+                .set('Authorization', `Bearer ${fakeToken}`)
+                .send({ username: "airam", position: true, argument: "Argumento de prueba" });
+            expect(res.status).to.equal(401);
+        });
+        it('No debe permitir crear comentario con un ID de debate inexistente (404 Not Found)', async () => {
+            const fakeDebateId = "ABCDEFGHIJ0123456789";
+            const res = await request(`${API_BASE_URL}/api/v1/debate`)
+                .post(`/${fakeDebateId}`)
+                .set('Authorization', `Bearer ${authToken}`)
+                .send({ username: "airam", position: true, argument: "Argumento de prueba" });
+            expect(res.status).to.equal(404);
+        });
     });
 
     // PUT /comment/:id
